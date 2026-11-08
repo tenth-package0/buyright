@@ -91,3 +91,9 @@ test("CSV supports quoted names, CRLF and fails on unsupported host", () => {
   assert.throws(() => parseRoster("name,team,profile\nSam,Ops,generic-laptop"));
   assert.throws(() => parseRoster('name,team,profile\n"Sam,Ops,mac-m2'));
 });
+test("CSV rejects ambiguous headers and rows with missing or extra fields", () => {
+  assert.equal(parseRoster(" name , team , profile \nSam,Ops,mac-m2")[0].name, "Sam");
+  assert.throws(() => parseRoster("name,team,profile,name\nSam,Ops,mac-m2,Other"), /unique/);
+  assert.throws(() => parseRoster("name,team,profile\nSam,Ops"), /row 2/);
+  assert.throws(() => parseRoster("name,team,profile\nSam,Ops,mac-m2,Extra"), /row 2/);
+});
