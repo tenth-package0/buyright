@@ -97,3 +97,8 @@ test("CSV rejects ambiguous headers and rows with missing or extra fields", () =
   assert.throws(() => parseRoster("name,team,profile\nSam,Ops"), /row 2/);
   assert.throws(() => parseRoster("name,team,profile\nSam,Ops,mac-m2,Extra"), /row 2/);
 });
+test("CSV rejects stray quotes and text after a closing quote", () => {
+  assert.equal(parseRoster('name,team,profile\n"Lee ""Sam""",Ops,mac-m2')[0].name, 'Lee "Sam"');
+  assert.throws(() => parseRoster('name,team,profile\nSa"m,Ops,mac-m2'), /quote/);
+  assert.throws(() => parseRoster('name,team,profile\n"Sam"oops,Ops,mac-m2'), /closing quote/);
+});

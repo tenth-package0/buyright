@@ -3,24 +3,38 @@ export function parseRoster(text: string): Employee[] {
   const rows: string[][] = [];
   let row: string[] = [],
     field = "",
-    quoted = false;
+    quoted = false,
+    closedQuote = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (c === '"') {
       if (quoted && text[i + 1] === '"') {
         field += '"';
         i++;
-      } else quoted = !quoted;
+      } else if (quoted) {
+        quoted = false;
+        closedQuote = true;
+      } else if (!field && !closedQuote) {
+        quoted = true;
+      } else {
+        throw new Error("CSV has a quote outside a quoted field.");
+      }
     } else if (c === "," && !quoted) {
       row.push(field.trim());
       field = "";
+      closedQuote = false;
     } else if ((c === "\n" || c === "\r") && !quoted) {
       if (c === "\r" && text[i + 1] === "\n") i++;
       row.push(field.trim());
       if (row.some(Boolean)) rows.push(row);
       row = [];
       field = "";
-    } else field += c;
+      closedQuote = false;
+    } else if (closedQuote && c !== " " && c !== "\t") {
+      throw new Error("CSV has text after a closing quote.");
+    } else if (!closedQuote) {
+      field += c;
+    }
   }
   if (quoted) throw new Error("CSV has an unclosed quoted field.");
   row.push(field.trim());
